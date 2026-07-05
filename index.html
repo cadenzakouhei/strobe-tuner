@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -6,58 +7,206 @@
 <title>Unison Strobe Tuner</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #0a0a0a;
-    color: #e0e0e0;
-    font-family: 'Courier New', monospace;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  #header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px 6px;
-    background: #111;
-    border-bottom: 1px solid #222;
-    flex-shrink: 0;
-  }
-  #note-display {
-    font-size: 2.8rem;
-    font-weight: 700;
-    letter-spacing: -1px;
-    color: #fff;
-    min-width: 80px;
-    text-align: left;
-    line-height: 1;
-  }
-  #freq-display { font-size: 0.75rem; color: #666; text-align: left; margin-top: 2px; }
-  #pitch-info { display: flex; flex-direction: column; align-items: flex-start; }
-  #cents-display { font-size: 1.1rem; color: #888; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
-  #beat-display { font-size: 0.7rem; color: #555; text-align: center; margin-top: 2px; }
-  #strobe-container { flex: 1; display: flex; flex-direction: column; padding: 8px 0; gap: 3px; overflow: hidden; }
-  .strobe-row { flex: 1; position: relative; overflow: hidden; background: #050505; border-top: 1px solid #181818; border-bottom: 1px solid #181818; }
-  .row-label { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); font-size: 0.6rem; color: #333; z-index: 10; pointer-events: none; font-family: 'Courier New', monospace; }
-  .strobe-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-  #controls { padding: 8px 14px 12px; background: #111; border-top: 1px solid #222; flex-shrink: 0; }
-  #pitch-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  #pitch-label { font-size: 0.65rem; color: #555; min-width: 24px; }
-  #pitch-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 3px; background: #2a2a2a; border-radius: 2px; outline: none; }
-  #pitch-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; }
-  #pitch-value { font-size: 0.8rem; color: #aaa; min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
-  #reset-btn { background: #1e1e1e; border: 1px solid #333; color: #888; font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; -webkit-tap-highlight-color: transparent; }
-  #reset-btn:active { background: #2a2a2a; color: #fff; }
-  #mic-row { display: flex; align-items: center; justify-content: space-between; }
-  #start-btn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; font-size: 0.7rem; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-family: 'Courier New', monospace; letter-spacing: 1px; -webkit-tap-highlight-color: transparent; transition: all 0.15s; }
-  #start-btn.active { border-color: #2a5c2a; color: #4caf50; background: #0f1f0f; }
-  #status-text { font-size: 0.6rem; color: #333; }
+
+body {
+background: #0a0a0a;
+color: #e0e0e0;
+font-family: ‘Courier New’, monospace;
+height: 100dvh;
+display: flex;
+flex-direction: column;
+overflow: hidden;
+user-select: none;
+-webkit-user-select: none;
+}
+
+#header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 14px 6px;
+background: #111;
+border-bottom: 1px solid #222;
+flex-shrink: 0;
+}
+
+#note-display {
+font-size: 2.8rem;
+font-weight: 700;
+letter-spacing: -1px;
+color: #fff;
+min-width: 80px;
+text-align: left;
+line-height: 1;
+}
+
+#freq-display {
+font-size: 0.75rem;
+color: #666;
+text-align: left;
+margin-top: 2px;
+}
+
+#pitch-info {
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+}
+
+#cents-display {
+font-size: 1.1rem;
+color: #888;
+font-variant-numeric: tabular-nums;
+min-width: 60px;
+text-align: center;
+}
+
+#beat-display {
+font-size: 0.7rem;
+color: #555;
+text-align: center;
+margin-top: 2px;
+}
+
+/* ストロボエリア */
+#strobe-container {
+flex: 1;
+display: flex;
+flex-direction: column;
+padding: 8px 0;
+gap: 3px;
+overflow: hidden;
+}
+
+.strobe-row {
+flex: 1;
+position: relative;
+overflow: hidden;
+background: #050505;
+border-top: 1px solid #181818;
+border-bottom: 1px solid #181818;
+}
+
+.row-label {
+position: absolute;
+left: 6px;
+top: 50%;
+transform: translateY(-50%);
+font-size: 0.6rem;
+color: #333;
+z-index: 10;
+pointer-events: none;
+font-family: ‘Courier New’, monospace;
+}
+
+.strobe-canvas {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+}
+
+/* ピッチスライダーエリア */
+#controls {
+padding: 8px 14px 12px;
+background: #111;
+border-top: 1px solid #222;
+flex-shrink: 0;
+}
+
+#pitch-row {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-bottom: 6px;
+}
+
+#pitch-label {
+font-size: 0.65rem;
+color: #555;
+min-width: 24px;
+}
+
+#pitch-slider {
+flex: 1;
+-webkit-appearance: none;
+appearance: none;
+height: 3px;
+background: #2a2a2a;
+border-radius: 2px;
+outline: none;
+}
+
+#pitch-slider::-webkit-slider-thumb {
+-webkit-appearance: none;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+background: #fff;
+cursor: pointer;
+}
+
+#pitch-value {
+font-size: 0.8rem;
+color: #aaa;
+min-width: 42px;
+text-align: right;
+font-variant-numeric: tabular-nums;
+}
+
+#reset-btn {
+background: #1e1e1e;
+border: 1px solid #333;
+color: #888;
+font-size: 0.65rem;
+padding: 3px 8px;
+border-radius: 4px;
+cursor: pointer;
+font-family: ‘Courier New’, monospace;
+-webkit-tap-highlight-color: transparent;
+}
+
+#reset-btn:active {
+background: #2a2a2a;
+color: #fff;
+}
+
+#mic-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+#start-btn {
+background: #1a1a1a;
+border: 1px solid #2a2a2a;
+color: #888;
+font-size: 0.7rem;
+padding: 6px 16px;
+border-radius: 6px;
+cursor: pointer;
+font-family: ‘Courier New’, monospace;
+letter-spacing: 1px;
+-webkit-tap-highlight-color: transparent;
+transition: all 0.15s;
+}
+
+#start-btn.active {
+border-color: #2a5c2a;
+color: #4caf50;
+background: #0f1f0f;
+}
+
+#status-text {
+font-size: 0.6rem;
+color: #333;
+}
 </style>
+
 </head>
 <body>
+
 <div id="header">
   <div id="pitch-info">
     <div id="note-display">--</div>
@@ -68,7 +217,9 @@
     <div id="beat-display">beat: --</div>
   </div>
 </div>
+
 <div id="strobe-container">
+  <!-- H8(上)からH1(下)の8段 -->
   <div class="strobe-row" id="row-8"><span class="row-label">H8</span><canvas class="strobe-canvas" id="c8"></canvas></div>
   <div class="strobe-row" id="row-7"><span class="row-label">H7</span><canvas class="strobe-canvas" id="c7"></canvas></div>
   <div class="strobe-row" id="row-6"><span class="row-label">H6</span><canvas class="strobe-canvas" id="c6"></canvas></div>
@@ -78,6 +229,7 @@
   <div class="strobe-row" id="row-2"><span class="row-label">H2</span><canvas class="strobe-canvas" id="c2"></canvas></div>
   <div class="strobe-row" id="row-1"><span class="row-label">H1</span><canvas class="strobe-canvas" id="c1"></canvas></div>
 </div>
+
 <div id="controls">
   <div id="pitch-row">
     <span id="pitch-label">A4</span>
@@ -90,45 +242,85 @@
     <span id="status-text">tap to start</span>
   </div>
 </div>
+
 <script>
-const HARMONICS = 8;
+// =========================================================
+//  設定
+// =========================================================
+const HARMONICS = 8;          // H1-H8
 const FFT_SIZE  = 8192;
-const SMOOTH    = 0.85;
-const CONFIRM_FRAMES = 6;
-const STOP_THRESHOLD = 0.10;
-const STRIPE_W  = 28;
+const SMOOTH    = 0.85;       // analyser smoothing
+const CONFIRM_FRAMES = 6;     // 音名確定に必要なフレーム数
+const STOP_THRESHOLD = 0.10;  // beat Hz 以下で停止(緑)
+const STRIPE_W  = 28;         // ストロボ縞の幅(px)
+
+// A0=27.5Hz, C8=4186Hz
 const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
 let audioCtx = null, analyser = null, micStream = null;
 let running = false;
 let a4Ref = 442.0;
+
+// ストロボ状態(各ハーモニクス)
+// offsets[i]: 0〜1 の位相オフセット(左→右方向)
 const offsets  = new Array(HARMONICS).fill(0);
-const speeds   = new Array(HARMONICS).fill(0);
+const speeds   = new Array(HARMONICS).fill(0); // px/frame
 const locked   = new Array(HARMONICS).fill(false);
+
+// 音名確定バッファ
 let noteHistory = [];
 let confirmedNote = null;
 let confirmedMidi = -1;
 let detectedFreq = 0;
+
+// Canvas取得
 const canvases = [];
-for (let i = 1; i <= HARMONICS; i++) canvases.push(document.getElementById('c' + i));
+for (let i = 1; i <= HARMONICS; i++) {
+  canvases.push(document.getElementById('c' + i));
+}
+
+// リサイズ
 function resizeCanvases() {
-  canvases.forEach(c => { c.width = c.offsetWidth * window.devicePixelRatio; c.height = c.offsetHeight * window.devicePixelRatio; });
+  canvases.forEach(c => {
+    c.width  = c.offsetWidth  * window.devicePixelRatio;
+    c.height = c.offsetHeight * window.devicePixelRatio;
+  });
 }
 window.addEventListener('resize', resizeCanvases);
 setTimeout(resizeCanvases, 100);
-const slider = document.getElementById('pitch-slider');
-const pitchVal = document.getElementById('pitch-value');
-const resetBtn = document.getElementById('reset-btn');
-slider.addEventListener('input', () => { a4Ref = slider.value / 10; pitchVal.textContent = a4Ref.toFixed(1) + ' Hz'; });
-resetBtn.addEventListener('click', () => { slider.value = 4420; a4Ref = 442.0; pitchVal.textContent = '442.0 Hz'; });
-const startBtn = document.getElementById('start-btn');
+
+// =========================================================
+//  ピッチスライダー
+// =========================================================
+const slider    = document.getElementById('pitch-slider');
+const pitchVal  = document.getElementById('pitch-value');
+const resetBtn  = document.getElementById('reset-btn');
+
+slider.addEventListener('input', () => {
+  a4Ref = slider.value / 10;
+  pitchVal.textContent = a4Ref.toFixed(1) + ' Hz';
+});
+resetBtn.addEventListener('click', () => {
+  slider.value = 4420;
+  a4Ref = 442.0;
+  pitchVal.textContent = '442.0 Hz';
+});
+
+// =========================================================
+//  マイク起動
+// =========================================================
+const startBtn   = document.getElementById('start-btn');
 const statusText = document.getElementById('status-text');
+
 startBtn.addEventListener('click', async () => {
   if (running) { stopMic(); return; }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
     micStream = stream;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
+    audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+    analyser  = audioCtx.createAnalyser();
     analyser.fftSize = FFT_SIZE;
     analyser.smoothingTimeConstant = SMOOTH;
     const src = audioCtx.createMediaStreamSource(stream);
@@ -138,12 +330,15 @@ startBtn.addEventListener('click', async () => {
     startBtn.classList.add('active');
     statusText.textContent = 'listening...';
     loop();
-  } catch(e) { statusText.textContent = 'mic error'; }
+  } catch(e) {
+    statusText.textContent = 'mic error';
+  }
 });
+
 function stopMic() {
   running = false;
   if (micStream) micStream.getTracks().forEach(t => t.stop());
-  if (audioCtx) audioCtx.close();
+  if (audioCtx)  audioCtx.close();
   startBtn.textContent = '▶ MIC START';
   startBtn.classList.remove('active');
   statusText.textContent = 'stopped';
@@ -153,87 +348,168 @@ function stopMic() {
   document.getElementById('beat-display').textContent = 'beat: --';
   offsets.fill(0); speeds.fill(0); locked.fill(false);
 }
-function freqToMidi(f, a4) { return 69 + 12 * Math.log2(f / a4); }
-function midiToFreq(m, a4) { return a4 * Math.pow(2, (m - 69) / 12); }
-function noteName(midi) { const oct = Math.floor(midi / 12) - 1; return NOTE_NAMES[midi % 12] + oct; }
+
+// =========================================================
+//  周波数→MIDI / 音名
+// =========================================================
+function freqToMidi(f, a4) {
+  return 69 + 12 * Math.log2(f / a4);
+}
+function midiToFreq(m, a4) {
+  return a4 * Math.pow(2, (m - 69) / 12);
+}
+function noteName(midi) {
+  const oct = Math.floor(midi / 12) - 1;
+  return NOTE_NAMES[midi % 12] + oct;
+}
+
+// =========================================================
+//  HPS(ハーモニック積スペクトル)ピッチ検出
+// =========================================================
 function detectPitch(buffer, sampleRate) {
   const N = buffer.length;
+  // 線形スペクトル
   const mag = new Float32Array(N);
   for (let i = 0; i < N; i++) mag[i] = Math.pow(10, buffer[i] / 20);
+
+  // HPS: H1~H5 積
   const hpsLen = Math.floor(N / 5);
   const hps = new Float32Array(hpsLen);
   for (let i = 0; i < hpsLen; i++) hps[i] = mag[i];
-  for (let h = 2; h <= 5; h++) for (let i = 0; i < hpsLen; i++) hps[i] *= mag[i * h];
+  for (let h = 2; h <= 5; h++) {
+    for (let i = 0; i < hpsLen; i++) hps[i] *= mag[i * h];
+  }
+
+  // A0(27.5Hz)〜C8(4186Hz)の範囲に絞る
   const lo = Math.floor(27.5 / sampleRate * N * 2);
   const hi = Math.ceil(4186 / sampleRate * N * 2);
   let best = 0, bestIdx = lo;
-  for (let i = lo; i < Math.min(hi, hpsLen); i++) { if (hps[i] > best) { best = hps[i]; bestIdx = i; } }
+  for (let i = lo; i < Math.min(hi, hpsLen); i++) {
+    if (hps[i] > best) { best = hps[i]; bestIdx = i; }
+  }
   if (best < 1e-6) return null;
+
+  // 放物線補間
   const a = bestIdx > 0 ? hps[bestIdx - 1] : 0;
   const b = hps[bestIdx];
   const c = bestIdx < hpsLen - 1 ? hps[bestIdx + 1] : 0;
   const delta = (a - c) / (2 * (a - 2*b + c) + 1e-12);
-  return (bestIdx + delta) * sampleRate / (N * 2);
+  const fineIdx = bestIdx + delta;
+  return fineIdx * sampleRate / (N * 2);
 }
+
+// =========================================================
+//  メインループ
+// =========================================================
 const freqData = new Float32Array(FFT_SIZE / 2);
-const noteDisp = document.getElementById('note-display');
-const freqDisp = document.getElementById('freq-display');
+const noteDisp  = document.getElementById('note-display');
+const freqDisp  = document.getElementById('freq-display');
 const centsDisp = document.getElementById('cents-display');
-const beatDisp = document.getElementById('beat-display');
+const beatDisp  = document.getElementById('beat-display');
+
 let lastTime = performance.now();
+
 function loop() {
   if (!running) return;
   requestAnimationFrame(loop);
+
   const now = performance.now();
-  const dt = (now - lastTime) / 1000;
+  const dt = (now - lastTime) / 1000; // 秒
   lastTime = now;
+
   analyser.getFloatFrequencyData(freqData);
+
+  // ピッチ検出
   const freq = detectPitch(freqData, audioCtx.sampleRate);
+
   if (freq) {
     detectedFreq = freq;
     const midiRaw = freqToMidi(freq, a4Ref);
     const midiRnd = Math.round(midiRaw);
+
+    // 音名安定化
     noteHistory.push(midiRnd);
     if (noteHistory.length > 8) noteHistory.shift();
+    // 多数決
     const counts = {};
     noteHistory.forEach(m => counts[m] = (counts[m]||0)+1);
     let topMidi = midiRnd, topCount = 0;
     Object.entries(counts).forEach(([m,c]) => { if(c>topCount){topCount=c;topMidi=+m;} });
-    if (topCount >= CONFIRM_FRAMES) { confirmedMidi = topMidi; confirmedNote = noteName(topMidi); }
+
+    if (topCount >= CONFIRM_FRAMES) {
+      confirmedMidi = topMidi;
+      confirmedNote = noteName(topMidi);
+    }
+
     if (confirmedMidi > 0) {
       const refFreq = midiToFreq(confirmedMidi, a4Ref);
       const cents = (midiRaw - confirmedMidi) * 100;
+
       noteDisp.textContent = confirmedNote;
       freqDisp.textContent = freq.toFixed(2) + ' Hz';
       centsDisp.textContent = (cents >= 0 ? '+' : '') + cents.toFixed(1) + '¢';
+
+      // 各ハーモニクスのビート周波数 & ストロボ速度
       for (let h = 1; h <= HARMONICS; h++) {
-        const beatHz = Math.abs(freq * h - refFreq * h);
-        const spd = beatHz * STRIPE_W * dt;
+        // 基音周波数に対するビートHz = 検出周波数 - 参照周波数(基音側)の倍音
+        // ここでは検出した周波数ずれをセントで持ち、それをHzに変換
+        const harmRefFreq = refFreq * h;
+        const harmDetFreq = freq * h;
+        const beatHz = Math.abs(harmDetFreq - harmRefFreq);
+
+        // 速度: beatHzに比例、1px/frameを1Hz相当とする
+        // 方向: 検出が高い→右向き(正)、低い→左向き(負)... でも今回は常に左→右
+        // ずれがあれば流れる、消えれば停止
+        const spd = beatHz * STRIPE_W * dt; // px/frame(実際はpx/sec * dt)
         speeds[h-1] = spd;
         locked[h-1] = beatHz <= STOP_THRESHOLD;
-        if (!locked[h-1]) offsets[h-1] = (offsets[h-1] + spd / STRIPE_W) % 1;
+
+        if (!locked[h-1]) {
+          // 左から右に流れる: offsetを増加
+          offsets[h-1] = (offsets[h-1] + spd / STRIPE_W) % 1;
+        }
       }
-      beatDisp.textContent = 'beat: ' + Math.abs(freq - refFreq).toFixed(2) + ' Hz';
+
+      // ビート表示(基音H1)
+      const b1 = Math.abs(freq - refFreq);
+      beatDisp.textContent = 'beat: ' + b1.toFixed(2) + ' Hz';
     }
-  } else { noteHistory = []; speeds.fill(0); }
+  } else {
+    // 無音
+    noteHistory = [];
+    speeds.fill(0);
+  }
+
+  // 描画
   drawStrobe();
 }
+
+// =========================================================
+//  ストロボ描画
+// =========================================================
 function drawStrobe() {
   for (let h = 1; h <= HARMONICS; h++) {
     const idx = h - 1;
-    const canvas = canvases[idx];
+    // 表示: H1が一番下(index 0のcanvas)、H8が一番上(index 7のcanvas)
+    const canvas = canvases[idx]; // c1=H1=最下段
     const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
+    const W = canvas.width;
+    const H = canvas.height;
     const dpr = window.devicePixelRatio || 1;
+
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, W, H);
+
     const sw = STRIPE_W * dpr;
     const offset = offsets[idx] * sw;
     const isLocked = locked[idx];
     const stripeColor = isLocked ? '#22cc44' : '#ffffff';
-    const glowColor = isLocked ? 'rgba(34,204,68,0.18)' : 'rgba(255,255,255,0.08)';
+    const glowColor   = isLocked ? 'rgba(34,204,68,0.18)' : 'rgba(255,255,255,0.08)';
+
+    // 縞模様(左から右に流れる)
     for (let x = -sw + offset; x < W + sw; x += sw * 2) {
+      // グロー
       const grad = ctx.createLinearGradient(x, 0, x + sw, 0);
       grad.addColorStop(0, 'transparent');
       grad.addColorStop(0.3, glowColor);
@@ -241,15 +517,27 @@ function drawStrobe() {
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.fillRect(x, 0, sw, H);
+
+      // コア縞
       ctx.fillStyle = stripeColor;
+      const coreW = sw * 0.38;
+      const coreX = x + sw * 0.31;
       ctx.globalAlpha = isLocked ? 0.92 : 0.80;
-      ctx.fillRect(x + sw * 0.31, H * 0.1, sw * 0.38, H * 0.8);
+      ctx.fillRect(coreX, H * 0.1, coreW, H * 0.8);
       ctx.globalAlpha = 1.0;
     }
-    if (isLocked) { ctx.fillStyle = 'rgba(34,204,68,0.06)'; ctx.fillRect(0, 0, W, H); }
+
+    // 停止時: 軽いグリーングロー全体
+    if (isLocked) {
+      ctx.fillStyle = 'rgba(34,204,68,0.06)';
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 }
+
+// 初期描画
 drawStrobe();
 </script>
+
 </body>
 </html>
